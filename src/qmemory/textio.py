@@ -19,7 +19,7 @@ TEXT_ERRORS = "replace"
 
 
 def run_text(
-    command: Sequence[str],
+    command: Sequence[Any],
     *,
     input: Optional[str] = None,
     check: bool = False,

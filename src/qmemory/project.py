@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import os
 import re
 import subprocess
+import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 from urllib.parse import urlsplit
 
 from .textio import run_text
@@ -21,10 +23,44 @@ class ProjectIdentity:
     identity_source: str = "cwd"
 
 
+def _resolve_path(path: Path) -> Path:
+    """Resolve a path even when the process filesystem codec is ASCII.
+
+    Linux can start a GUI-launched agent without a UTF-8 locale, leaving
+    ``sys.getfilesystemencoding()`` set to ASCII. ``Path.resolve`` then cannot
+    encode a perfectly valid UTF-8 filename such as ``冷静``. POSIX APIs also
+    accept raw bytes, so use that lossless boundary only for this fallback.
+    """
+
+    expanded = path.expanduser()
+    try:
+        return expanded.resolve()
+    except UnicodeEncodeError:
+        if os.name != "posix":
+            raise
+        absolute = os.path.abspath(str(expanded))
+        raw_path = absolute.encode("utf-8", errors="surrogateescape")
+        resolved = os.path.realpath(raw_path)
+        return Path(resolved.decode("utf-8", errors="surrogateescape"))
+
+
+def _subprocess_path(path: Path) -> Union[str, bytes]:
+    """Return an argv-safe path for the current filesystem encoding."""
+
+    value = str(path)
+    try:
+        value.encode(sys.getfilesystemencoding(), errors="strict")
+    except UnicodeEncodeError:
+        if os.name != "posix":
+            raise
+        return value.encode("utf-8", errors="surrogateescape")
+    return value
+
+
 def _git(path: Path, *args: str) -> Optional[str]:
     try:
         result = run_text(
-            ["git", "-C", str(path)] + list(args),
+            ["git", "-C", _subprocess_path(path)] + list(args),
             check=True,
             stderr=subprocess.DEVNULL,
         )
@@ -62,7 +98,7 @@ def _canonical_git_root(root: Path) -> Path:
     common_value = _git(root, "rev-parse", "--path-format=absolute", "--git-common-dir")
     if not common_value:
         return root
-    common = Path(common_value).expanduser().resolve()
+    common = _resolve_path(Path(common_value))
     if common.name == ".git":
         return common.parent
     return root
@@ -104,9 +140,9 @@ def identify_project(
     if selected is None:
         selected = manual_fallback or Path.cwd()
         source = "manual"
-    candidate = selected.expanduser().resolve()
+    candidate = _resolve_path(selected)
     root_value = _git(candidate, "rev-parse", "--show-toplevel")
-    root = Path(root_value).resolve() if root_value else candidate
+    root = _resolve_path(Path(root_value)) if root_value else candidate
     canonical_root = _canonical_git_root(root) if root_value else root
     remote = _git_remote(root)
     commit = _git(root, "rev-parse", "HEAD")
