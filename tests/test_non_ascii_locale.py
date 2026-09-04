@@ -15,6 +15,7 @@ reproduce a C-level locale decision the parent test process cannot fake.
 
 from __future__ import annotations
 
+import base64
 import json
 import os
 import subprocess
@@ -47,8 +48,19 @@ def _ascii_locale_env(home: Path) -> dict[str, str]:
 def _run_in_ascii_locale(script: str, home: Path) -> dict:
     """Execute ``script`` in a child interpreter pinned to the C locale."""
 
+    # The child deliberately uses an ASCII filesystem encoding. Passing the
+    # Unicode test program directly as the ``-c`` argument therefore fails on
+    # Linux before Python can execute it. Transport the UTF-8 source as base64
+    # so argv stays ASCII-only while the decoded program still exercises the
+    # real non-ASCII paths and payloads.
+    encoded_script = base64.b64encode(script.encode("utf-8")).decode("ascii")
+    bootstrap = (
+        "import base64;"
+        "exec(compile(base64.b64decode(%r),"
+        "'<qmemory-ascii-locale-test>','exec'))" % encoded_script
+    )
     result = subprocess.run(
-        [sys.executable, "-X", "utf8=0", "-c", script],
+        [sys.executable, "-X", "utf8=0", "-c", bootstrap],
         env=_ascii_locale_env(home),
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -93,7 +105,11 @@ def test_child_interpreter_really_uses_ascii(tmp_path: Path) -> None:
         "print(json.dumps({'preferred': locale.getpreferredencoding(False)}))",
         tmp_path / "home",
     )
-    assert probe["preferred"].lower().replace("_", "-") in ("ascii", "us-ascii")
+    assert probe["preferred"].lower().replace("_", "-") in (
+        "ascii",
+        "us-ascii",
+        "ansi-x3.4-1968",
+    )
 
 
 def test_project_identity_resolves_under_ascii_locale(
