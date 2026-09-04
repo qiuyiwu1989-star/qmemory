@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "benchmark_id": "memorycore-shadow-smoke-v1",
+  "cases": [
+    {
+      "case_id": "shadow-policy",
+      "evidence_refs": [
+        "codex://conversation-1#message-12"
+      ],
+      "gold_atoms": [
+        {
+          "statement": "MemoryCore 必须采用影子模式"
+        }
+      ],
+      "candidate_atoms": [
+        {
+          "statement": "MemoryCore 必须采用影子模式。",
+          "source_refs": [
+            "codex://conversation-1#message-12"
+          ]
+        },
+        {
+          "statement": "MemoryCore必须采用影子模式",
+          "source_refs": [
+            "codex://conversation-1#message-12"
+          ]
+        },
+        {
+          "statement": "MemoryCore 已自动接管正式记忆",
+          "source_refs": [
+            "codex://missing#message-1"
+          ],
+          "supported": false
+        }
+      ],
+      "relevant_memory_ids": [
+        "memory-shadow-policy"
+      ],
+      "retrieved": [
+        "memory-shadow-policy",
+        "memory-other"
+      ],
+      "latency_ms": 12.5
+    },
+    {
+      "case_id": "fail-open-policy",
+      "evidence_refs": [
+        "claude-code://conversation-2#message-8"
+      ],
+      "gold_atoms": [
+        {
+          "statement": "记忆服务故障不能阻断 Agent"
+        }
+      ],
+      "candidate_atoms": [
+        {
+          "statement": "记忆服务故障不能阻断 Agent。",
+          "source_refs": [
+            "claude-code://conversation-2#message-8"
+          ]
+        }
+      ],
+      "relevant_memory_ids": [
+        "memory-fail-open"
+      ],
+      "retrieved": [
+        "other-1",
+        "other-2",
+        "other-3",
+        "other-4",
+        "other-5",
+        "memory-fail-open"
+      ],
+      "latency_ms": 310.0
+    }
+  ]
+}

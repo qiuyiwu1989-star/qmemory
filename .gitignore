@@ -1,0 +1,16 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.venv/
+.bootstrap/
+dist/
+build/
+artifacts/
+*.app/
+.DS_Store
+.qmemory/
+nuitka-crash-report.xml
+.coverage
+htmlcov/
+.mypy_cache/
