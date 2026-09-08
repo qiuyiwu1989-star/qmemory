@@ -31,3 +31,6 @@ qmemory-gui = "qmemory.desktop:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+qmemory = ["web/*.html", "web/*.css", "web/*.js"]
