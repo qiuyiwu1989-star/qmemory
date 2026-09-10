@@ -1,0 +1,25 @@
+{
+  "synthetic": true,
+  "description": "OpenDesign Docs consumer regression, no private transcripts or production facts",
+  "baseline": [
+    {"type": "decision", "statement": "OpenDesign keeps public reading separate from the creator workbench."},
+    {"type": "constraint", "statement": "Export acceptance requires download, reopen, edit, save and reimport, not just HTTP 200."},
+    {"type": "incident", "statement": "A synthetic export fixture lost local asset references; resolve packaged assets before reimport."},
+    {"type": "status", "statement": "Local export fixture passed; authenticated public save/export is still unverified."},
+    {"type": "handoff", "statement": "Changed: local round trip verified. Remaining: owner-side public export. Next: run authenticated fixture."}
+  ],
+  "queries": [
+    "隔天 继续 文档 导出 验收", "恢复昨天的开发上下文", "帮我接着完成这个产品", "新 Agent 接手 项目边界",
+    "导入 HTML 后重新编辑保存", "目前线上和本地的交付区别", "从浏览页面到创作工作台", "回顾过去踩过的坑",
+    "今晚我要测试最终下载流程", "有没有不能打破的架构决定", "昨天卡在哪里 下一步怎么走", "不要只看请求成功",
+    "resume OpenDesign publishing after context reset", "continue owner acceptance tomorrow", "export delivery verification",
+    "recover the current project constraints", "review incident before another refactor", "new device project handover",
+    "HTML import edit save download reimport", "what remains before public delivery"
+  ],
+  "host_policy_cases": [
+    {"case": "simple translation", "context_fresh": true, "calls": []},
+    {"case": "same-session UI spacing", "context_fresh": true, "calls": []},
+    {"case": "cross-day continuation with changed state", "context_fresh": false, "calls": ["project_bootstrap", "session_handoff"]},
+    {"case": "incident repair with existing confirmed context and changed handoff", "context_fresh": true, "calls": ["project_context", "session_handoff"]}
+  ]
+}

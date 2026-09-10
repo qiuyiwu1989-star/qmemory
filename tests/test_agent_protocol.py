@@ -45,11 +45,16 @@ def test_install_protocol_updates_managed_block_without_duplication(tmp_path: Pa
     assert inspect_protocol(path)["state"] == "current"
 
 
-def test_protocol_archives_both_agents_before_context(tmp_path: Path) -> None:
+def test_protocol_uses_conditional_bootstrap_and_fail_open(tmp_path: Path) -> None:
     path = tmp_path / "AGENTS.md"
     install_protocol(path)
     text = path.read_text(encoding="utf-8")
     assert "agent_conversations_sync" in text
+    assert "project_bootstrap" in text
+    assert "ZERO memory calls" in text
+    assert "same session" in text
+    assert "Fail-open" in text
+    assert "no-op" in text
     assert "Codex and Claude Code" in text
     assert "claude-code" in text
     assert global_claude_path(tmp_path) == tmp_path / "CLAUDE.md"

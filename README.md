@@ -199,19 +199,22 @@ claude mcp get qmemory
 
 两个 Agent 调用同一组工具、读写同一个判断库；会话原文则按 `codex` / `claude-code` 分源存放。
 
-QMemory 暴露 15 个 MCP 工具：
+QMemory 暴露 17 个 MCP 工具：
 
 ```text
 agent_conversations_sync  codex_conversations_sync
 conversation_search       conversation_get
 insight_pipeline_status
-project_context       memory_search        memory_get
+project_bootstrap     project_context      usage_stats
+memory_search         memory_get
 memory_propose        memory_confirm       memory_supersede
 record_incident       session_handoff      memory_feedback
 sync_status
 ```
 
-建议客户端协议：任务开始先调用 `agent_conversations_sync`，再调用 `project_context`；需要核对历史证据时使用会话检索；新判断先 `memory_propose`；只有用户明确确认后才 `memory_confirm`；任务结束写 `session_handoff`。
+建议客户端协议（v4）：简单任务零调用；同一会话连续开发、上下文新鲜时跳过同步。跨日、跨 Agent/设备或上下文不足时只调用一次 `project_bootstrap`（默认 TTL 300 秒），内部按新鲜度决定是否归档，并返回项目基线与查询补充。`project_context` 仅刷新有界记忆，不触发来源同步；原有显式同步工具保留。记忆服务故障时 fail-open，提示一次后继续开发，不循环重试。新判断仍需 propose/明确确认；只有状态有变化时写短 `session_handoff`，相同规范化内容返回 no-op。常规目标是启动/结束最多两次往返，不以减少次数为由跳过确认。
+
+`usage_stats` 提供本地上下文调用量、空召回率、handoff/no-op 比例、元数据扫描量和 payload/延迟估算；模型上下文重读成本和补搜意图尚无法从服务端准确测量，返回 null。完整行为与验收见 [P0 使用方改进说明](docs/consumer-p0-implementation.md)。
 
 “启用自动记忆”会把一段带版本标记的受管协议同时写入 `~/.codex/AGENTS.md` 和 `~/.claude/CLAUDE.md`。它只负责行为策略：何时归档、何时读、哪些内容能写、何时确认和如何交接；实际数据仍通过 MCP 写入 QMemory。已有全局指令会保留，后续升级只替换 QMemory 自己的受管区块。
 

@@ -175,6 +175,7 @@ def build_quality_report(
         "scope": str(project_path.expanduser().resolve()) if project_path else "all-projects",
         "thresholds": asdict(thresholds),
         "summary": {
+            "usage": service.usage_stats(project_path) if hasattr(service, 'usage_stats') else {'available': False},
             "projects": len(selected),
             "tasks": total_tasks,
             "content_gap_tasks": content_gap_tasks,
